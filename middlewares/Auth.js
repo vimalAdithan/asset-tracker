@@ -24,7 +24,7 @@ export const EmployeeAuth = async (req, res, next) => {
     req.employeeId = Decoded.id;
     next();
   } catch (error) {
-    console.log("Error in E-AUTH:", error.message);
+    console.error("Error in E-AUTH:", error.message);
     return res.status(200).json({ code: 500, msg: "Server error" });
   }
 };
@@ -51,7 +51,7 @@ export const AssetMasterAuth = async (req, res, next) => {
     req.masterId = Decoded.id;
     next();
   } catch (error) {
-    console.log("Error in A-AUTH:", error.message);
+    console.error("Error in A-AUTH:", error.message);
     return res.status(200).json({ code: 500, msg: "Server error" });
   }
 };

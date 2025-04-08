@@ -46,7 +46,7 @@ export const AllAssets = async (req, res) => {
     });
     return res.status(200).json({ code: 200, value: allAssets });
   } catch (error) {
-    console.log("E_ALL_ASSETS:", error.message);
+    console.error("E_ALL_ASSETS:", error.message);
     return res
       .status(200)
       .json({ code: 500, msg: "Server error", error: error.message });

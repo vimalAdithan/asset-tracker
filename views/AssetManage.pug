@@ -82,11 +82,8 @@ html
       searchBtn.addEventListener("click", fetchAssets);
 
       async function manageAsset(button,action) {
-        console.log({button,action})
         const originalText = button.innerHTML;
         const serialNo = button.getAttribute('data-asset-id');
-
-        console.log(serialNo)
 
         if (!serialNo) {
           alert("serialNo is missing.");

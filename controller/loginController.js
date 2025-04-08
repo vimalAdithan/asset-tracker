@@ -28,7 +28,7 @@ export const SignUpController = async (req, res) => {
     await UserModel.create(userData);
     return res.status(200).json({ code: 200, msg: "created successfully" });
   } catch (error) {
-    console.log("E_SIGNUP : ", error.message);
+    console.error("E_SIGNUP : ", error.message);
     return res.status(200).json({ code: 500, msg: "server error" });
   }
 };
@@ -57,7 +57,7 @@ export const SignInController = async (req, res) => {
     );
     return res.status(200).json({ code: 200, token, role: User.role });
   } catch (error) {
-    console.log("E_SIGNIN : ", error.message);
+    console.error("E_SIGNIN : ", error.message);
     return res.status(200).json({ code: 500, msg: "server error" });
   }
 };
