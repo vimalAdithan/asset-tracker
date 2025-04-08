@@ -1,0 +1,113 @@
+doctype html
+html
+  head
+    title Asset Tracker - Dashboard
+    link(rel="stylesheet", href="/styles.css")
+    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.4/dist/css/bootstrap.min.css" integrity="sha384-DQvkBjpPgn7RC31MCQoOeC9TI2kdqa4+BSgNMNj8v77fdC77Kj5zpWFTJaaAoMbC" crossorigin="anonymous")
+    script(src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js")
+
+  body
+    nav.navbar.navbar-expand-lg.bg-body-tertiary
+      .container-fluid
+        a.navbar-brand(href="") Dashboard
+        button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation")
+          span.navbar-toggler-icon
+        .collapse.navbar-collapse#navbarNavAltMarkup
+          .navbar-nav
+            a.nav-link.active(aria-current="page" href="/master/stock") Stock View
+            a.nav-link(href="/master/asset/manage") Asset Manage
+            a.nav-link(href="/master/employees") Asset History
+            a.nav-link(href="/master/scrap-asset") Scrap Asset
+            a.nav-link(href="" onclick="event.preventDefault(); localStorage.clear(); window.location.href='/login';") Logout
+    main.container.mt-4
+      .d-flex.justify-content-between.align-items-center.mb-3.employee-actions
+        a.btn.btn-primary(href="/master/asset/add") Add New Asset
+        .d-flex.align-items-center.gap-2.flex-nowrap
+          input#assetSearch.form-control(type="text", placeholder="Search make/model...", style="width: 250px;")
+          select#typeFilter.form-select
+            option(value="all") All Types
+            option(value="laptop") Laptop
+            option(value="monitor") Monitor
+            option(value="printer") Printer
+            option(value="accessory") Accessory
+          button(type="button")#searchBtn.btn.btn-outline-secondary Search
+      .asset-list
+        .table-responsive
+          table#assetTable.table.table-hover.table-bordered.align-middle.text-center
+            thead.table-light
+              tr
+                th Make
+                th Model
+                th Description
+                th Serial No.
+                th Category
+                th Actions
+            tbody
+
+    script.
+      var token = localStorage.getItem('token');
+      if (!token) {
+        alert("Authentication token not found. Please log in.")
+        window.location.href = '/';
+      }else{
+        if(jwt_decode(token)?.role !== "master"){
+          alert("Authentication token not found. Please log in.")
+          window.location.href = '/';
+        }
+      }
+    script.
+      const assetSearch = document.getElementById("assetSearch");
+      const typeFilter = document.getElementById("typeFilter");
+      const searchBtn = document.getElementById("searchBtn");
+
+      async function fetchAssets() {
+        const response = await fetch('/api/assets', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          }
+        });
+        const result = await response.json();
+        const assets=result.value
+        const searchQuery = assetSearch.value.trim().toLowerCase();
+        const selectedType = typeFilter.value;
+
+        const tbody = document.querySelector("#assetTable tbody");
+        tbody.innerHTML = '';
+
+        const filtered = assets.filter(asset => {
+          const matchesSearch = asset.make.toLowerCase().includes(searchQuery) || asset.model.toLowerCase().includes(searchQuery);
+          const matchesType = selectedType === 'all' || asset.type?.toLowerCase() === selectedType;
+          return matchesSearch && matchesType;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7">No assets found.</td></tr>`;
+          return;
+        }
+
+        filtered.forEach(asset => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${asset.make}</td>
+            <td>${asset.model}</td>
+            <td>${asset.description}</td>
+            <td>${asset.serialNo}</td>
+            <td>${asset.category}</td>
+            <td>
+              <a href="/master/asset/edit/${asset.id}" class="btn btn-sm btn-warning me-1">Edit</a>
+              <a href="/master/asset/issue/${asset.id}" class="btn btn-sm btn-info me-1">Issue</a>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      fetchAssets();
+
+      searchBtn.addEventListener("click", fetchAssets);
+      typeFilter.addEventListener("change", fetchAssets);
+
+
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.4/dist/js/bootstrap.bundle.min.js" integrity="sha384-YUe2LzesAfftltw+PEaao2tjU/QATaW/rOitAq67e0CT0Zi2VVRL0oC4+gAaeBKu" crossorigin="anonymous")

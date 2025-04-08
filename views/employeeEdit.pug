@@ -1,0 +1,126 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Edit Employee
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+  body
+    .container.mt-5
+      .row.justify-content-center
+        .col-md-6
+          .card
+            .card-header.text-center
+              h3 Edit Employee
+            .card-body
+              form#employeeForm
+                .mb-3
+                  label.form-label(for="name") Name
+                  input.form-control(type="text", id="name", name="name", required=true)
+                .mb-3
+                  label.form-label(for="email") Email
+                  input.form-control(type="email", id="email", name="email", disabled)
+                .mb-3
+                  label.form-label(for="phone") Phone
+                  input.form-control(type="tel", id="phone", name="phone", required=true)
+                .mb-3
+                  label.form-label(for="status") Status
+                  select.form-select(id="status", name="status")
+                    option(value="active") Active
+                    option(value="inactive") Inactive
+                button.btn.btn-primary.w-100(type="submit") Update
+                .mt-3#message
+                .mt-4.text-center
+                a.btn.btn-secondary(href="/dashboard") ← Back
+    script.
+      const token = localStorage.getItem('token');
+      const urlParts = window.location.pathname.split('/');
+      var employeeId = urlParts[urlParts.length - 1];
+
+      if (!token) {
+        alert("Authentication token not found. Please log in.")
+        window.location.href = '/';
+      }
+
+      const form = document.getElementById('employeeForm');
+      const submitButton = form.querySelector('button[type="submit"]');
+      const messageDiv = document.getElementById('message');
+
+      async function loadEmployee() {
+        try {
+          const res = await fetch(`/api/employee/${employeeId}`, {
+            headers: { 'Authorization': token }
+          });
+          const result = await res.json();
+          if (result.code === 200) {
+            form.name.value = result.value.name;
+            form.email.value = result.value.email;
+            form.phone.value = result.value.phone;
+            form.status.value = result.value.status;
+          } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">${result.msg}</div>`;
+          }
+        } catch (err) {
+          messageDiv.innerHTML = `<div class="alert alert-danger">Failed to load employee data</div>`;
+        }
+      }
+
+      loadEmployee();
+
+    script.
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const name = form.name.value.trim();
+        const phone = form.phone.value.trim();
+        const status = form.status.value;
+
+        const nameRegex = /^[A-Za-z\s]+$/;
+        const phoneRegex = /^(?:\+91[\-\s]?|0)?[6-9]\d{9}$/;
+
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = '';
+
+        if (!nameRegex.test(name)) {
+          messageDiv.innerHTML = '<div class="alert alert-warning">Name must contain only letters and spaces.</div>';
+          return;
+        }
+
+        if (!phoneRegex.test(phone)) {
+          messageDiv.innerHTML = '<div class="alert alert-warning">Check the Phone number</div>';
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.innerText = "Updating...";
+
+        const formData = {
+          name,
+          phone,
+          status
+        };
+        try {
+          const response = await fetch("/api/employee/"+employeeId, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify(formData)
+          });
+
+          const result = await response.json();
+
+          if (result.code === 200) {
+            messageDiv.innerHTML = '<div class="alert alert-success">Employee updated successfully!</div>';
+          } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.msg}</div>`;
+          }
+        } catch (error) {
+          messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerText = "update";
+        }
+        });
+
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

@@ -1,0 +1,111 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Add Asset
+    link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+    script(src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js")
+  body
+    .container.mt-5
+      .row.justify-content-center
+        .col-md-6
+          .card
+            .card-header.text-center
+              h3 Add Asset
+            .card-body
+              form#employeeForm
+                .mb-3
+                  label.form-label(for="make") Asset Make
+                  input.form-control(type="text", id="make", name="make", required=true)
+                .mb-3
+                  label.form-label(for="model") Asset Model
+                  input.form-control(type="text", id="model", name="model", required=true)
+                .mb-3
+                  label.form-label(for="description") Asset Description
+                  textarea.form-control(id="description", name="description", rows="3", required=true)
+                .mb-3
+                  label.form-label(for="serialNo") Serial No
+                  input.form-control(type="text", id="serialNo", name="serialNo", required=true)
+                button.btn.btn-primary.w-100(type="submit") Submit
+                .mt-3#message
+                .mt-4.text-center
+                a.btn.btn-secondary(href="/master") ← Back
+    script.
+      document.getElementById('employeeForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitButton = form.querySelector('button[type="submit"]');
+        const make = form.make.value.trim();
+        const model = form.model.value.trim();
+        const description = form.description.value.trim();
+        const serialNo = form.serialNo.value.trim();
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = '';
+
+        if (make.length < 2) {
+          messageDiv.innerHTML = '<div class="alert alert-warning">Asset Make must be at least 2 characters long.</div>';
+          return;
+        }
+
+        if (model.length < 1) {
+          messageDiv.innerHTML = '<div class="alert alert-warning">Asset Model is required.</div>';
+          return;
+        }
+
+        if (description.length < 5) {
+          messageDiv.innerHTML = '<div class="alert alert-warning">Asset Description should be at least 5 characters long.</div>';
+          return;
+        }
+
+        if (serialNo.length < 5) {
+          messageDiv.innerHTML = '<div class="alert alert-warning">Asset Serial number should be at least 5 characters long.</div>';
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.innerText = "Submitting...";
+
+        const formData = {
+          make,
+          model,
+          description,
+          serialNo
+        };
+        try {
+          const response = await fetch('/api/asset/add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify(formData)
+          });
+
+          const result = await response.json();
+
+          if (result.code === 200) {
+            messageDiv.innerHTML = '<div class="alert alert-success">Asset added successfully!</div>';
+            form.reset();
+          } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.msg}</div>`;
+          }
+        } catch (error) {
+          messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerText = "Submit";
+        }
+        });
+    script.
+      var token = localStorage.getItem('token');
+      if (!token) {
+        alert("Authentication token not found. Please log in.")
+        window.location.href = '/';
+      }else{
+        if(jwt_decode(token)?.role !== "master"){
+          alert("Authentication token not found. Please log in.")
+          window.location.href = '/';
+        }
+      }
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

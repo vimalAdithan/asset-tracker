@@ -1,0 +1,66 @@
+doctype html
+html
+  head
+    title Asset Master - Asset Tracker
+    link(rel="stylesheet", href="/styles.css")
+  body
+    header
+      h1 Asset Master
+      nav
+        a(href="/dashboard") Back to Dashboard
+    main
+      .asset-actions
+        a(href="/asset/add") Add New Asset
+        input(type="text", id="assetSearch", placeholder="Search assets...") 
+        button(id="searchAssetBtn") Search
+      .asset-list
+        table(id="assetTable")
+          thead
+            tr
+              th Asset ID
+              th Make/Model
+              th Type
+              th Serial Number
+              th Actions
+          tbody
+
+    script.
+      async function fetchAssets() {
+        const response = await fetch('/api/assets');
+        const assets = await response.json();
+
+        const tbody = document.querySelector("#assetTable tbody");
+        tbody.innerHTML = ''; 
+        assets.forEach(asset => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${asset.assetId}</td>
+            <td>${asset.make} ${asset.model}</td>
+            <td>${asset.type}</td>
+            <td>${asset.serialNumber}</td>
+            <td>
+              <a href="/asset/edit/${asset.assetId}">Edit</a> | 
+              <a href="#" class="scrap" data-id="${asset.assetId}">Scrap</a>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      fetchAssets();
+
+      document.querySelector("#assetTable").addEventListener("click", async function(e) {
+        if (e.target.classList.contains("scrap")) {
+          const assetId = e.target.getAttribute("data-id");
+          const response = await fetch(`/api/assets/${assetId}/scrap`, {
+            method: 'PATCH'
+          });
+
+          if (response.ok) {
+            alert("Asset scrapped successfully.");
+            fetchAssets(); 
+          } else {
+            alert("Error scrapping asset.");
+          }
+        }
+      });
