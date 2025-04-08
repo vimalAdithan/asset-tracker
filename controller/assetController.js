@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { AssetModel, AssetHistoryModel } from "../db/assetModels.js";
 import { EmployeeModel, UserModel } from "../db/dbModels.js";
 import { sequelize } from "../db/dbServer.js";
