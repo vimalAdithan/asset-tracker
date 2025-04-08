@@ -25,6 +25,7 @@ app.use("/master", masterFeRoutes);
 app.use("/api", EmployeeBeRouter);
 app.use("/api", masterBeRoutes);
 
-app.listen(4000, () => {
-  console.log("Server running in port 4000");
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`Server running in port ${PORT}`);
 });
