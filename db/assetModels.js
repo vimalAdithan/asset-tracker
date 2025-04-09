@@ -22,7 +22,7 @@ export const AssetModel = sequelize.define("Asset", {
   },
   category: {
     type: DataTypes.STRING,
-    defaultValue: "other",
+    defaultValue: "OTHER",
   },
   status: {
     type: DataTypes.ENUM("assigned", "returned", "scrapped"),

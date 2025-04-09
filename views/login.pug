@@ -50,7 +50,15 @@ html
         const result = await response.json();
         if (result?.code === 200) {
           localStorage.setItem("token", result.token);
-          window.location.href = result?.role==="master"?"/master":'/dashboard';
+          let redirect = ""
+          if(result?.role==="master"){
+            redirect = "/master"
+          }else if(result?.role==="category"){
+            redirect = "/category"
+          }else{
+            redirect = "/dashboard"
+          }
+          window.location.href = redirect;
         } else {
           alert(result.msg); 
         }

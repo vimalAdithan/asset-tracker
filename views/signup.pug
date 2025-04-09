@@ -31,9 +31,13 @@ html
               label.form-label(for="confirm-password") Confirm Password
               input.form-control(type="password", id="confirm-password", name="confirm-password", required)
 
-            .form-check.mb-3
-              input.form-check-input(type="checkbox", id="isAdmin", name="isAdmin")
-              label.form-check-label(for="isAdmin") Sign up as Asset Master
+            .mb-3
+              label.form-label(for="role") Select Role
+              select.form-select(id="role", name="role", required)
+                option(value="" disabled selected) -- Select Role --
+                option(value="employee") Employee Master
+                option(value="master") Asset Master
+                option(value="category") Category Master
 
             button.btn.btn-primary.w-100(type="submit", id="submitBtn") Sign Up
 
@@ -49,7 +53,7 @@ html
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirm-password").value;
-      const isAdmin = document.getElementById("isAdmin").checked;
+      const role = document.getElementById("role").value;
 
 
       if(!(username.length>=3)){
@@ -68,11 +72,18 @@ html
         submitButton.disabled = false;
         return;
       }
+
+      if (!role) {
+        alert("Please select a role!");
+        submitButton.disabled = false;
+        return;
+      }
+
       try{
         const response = await fetch('/api/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password ,isAdmin})
+          body: JSON.stringify({ username, email, password, role})
         });
         const result = await response.json();
         if (result?.code===200) {

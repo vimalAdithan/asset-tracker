@@ -2,7 +2,7 @@ import express from "express";
 import { SignUpController } from "../controller/loginController.js";
 import {
   AddAsset,
-  AllAssets,
+  AvailableAssets,
   EditAssetWithId,
   GetAssetWithId,
   GetHistoryWithEmployeeId,
@@ -18,7 +18,7 @@ import { AllEmployees } from "../controller/masterController.js";
 const masterBeRoutes = express.Router();
 
 masterBeRoutes.post("/asset/add", AssetMasterAuth, AddAsset);
-masterBeRoutes.get("/assets", AssetMasterAuth, AllAssets);
+masterBeRoutes.get("/assets", AssetMasterAuth, AvailableAssets);
 masterBeRoutes.get("/asset/:id", AssetMasterAuth, GetAssetWithId);
 masterBeRoutes.put("/asset/:id", AssetMasterAuth, EditAssetWithId);
 masterBeRoutes.get("/master/employees", AssetMasterAuth, AllEmployees);

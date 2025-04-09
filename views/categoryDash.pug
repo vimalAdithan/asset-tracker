@@ -9,19 +9,27 @@ html
   body
     nav.navbar.navbar-expand-lg.bg-body-tertiary
       .container-fluid
-        a.navbar-brand(href="") Asset Dashboard
+        a.navbar-brand(href="") Category Dashboard
         button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation")
           span.navbar-toggler-icon
         .collapse.navbar-collapse#navbarNavAltMarkup
           .navbar-nav
-            a.nav-link.active(aria-current="page" href="/master/stock") Stock View
-            a.nav-link(href="/master/asset/manage") Asset Manage
-            a.nav-link(href="/master/employees") Asset History
-            a.nav-link(href="/master/scrap-asset") Scrap Asset
             a.nav-link(href="" onclick="event.preventDefault(); localStorage.clear(); window.location.href='/login';") Logout
     main.container.mt-4
+      div#addCategoryModal.modal.fade(tabindex="-1")
+        .modal-dialog
+          .modal-content
+            .modal-header
+              h5.modal-title Add New Category
+              button.btn-close(type="button", data-bs-dismiss="modal")
+            .modal-body
+              form#addCategoryForm
+                .mb-3
+                  label.form-label(for="newCategory") Category Name
+                  input.form-control(type="text", id="newCategory", required)
+                button.btn.btn-primary(type="submit") Add
       .d-flex.justify-content-between.align-items-center.mb-3.employee-actions
-        a.btn.btn-primary(href="/master/asset/add") Add New Asset
+        button.btn.btn-primary(data-bs-toggle="modal", data-bs-target="#addCategoryModal") Add Category
         .d-flex.align-items-center.gap-2.flex-nowrap
           input#assetSearch.form-control(type="text", placeholder="Search make/model...", style="width: 250px;")
           select#typeFilter.form-select
@@ -36,7 +44,6 @@ html
                 th Description
                 th Serial No.
                 th Category
-                th Actions
             tbody
 
     script.
@@ -45,13 +52,13 @@ html
         alert("Authentication token not found. Please log in.")
         window.location.href = '/';
       }else{
-        if(jwt_decode(token)?.role !== "master"){
+        if(jwt_decode(token)?.role !== "category"){
           alert("Authentication token not found. Please log in.")
           window.location.href = '/';
         }
       }
-    script.
 
+    script.
       let categories = [];
       async function fetchCategories() {
         const res = await fetch('/api/category-list', {
@@ -67,13 +74,51 @@ html
       }
       fetchCategories()
 
+
+      document.getElementById("addCategoryForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const newCategory = document.getElementById("newCategory").value.trim();
+        if (!newCategory) return alert("Category cannot be empty");
+
+        const submitBtn = this.querySelector("button[type='submit']");
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Adding...`;
+
+
+        try {
+          const res = await fetch('/api/add-category', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify({ name: newCategory })
+          });
+          const result = await res.json();
+          if (result.code === 200) {
+            alert("Category added!");
+            document.getElementById("newCategory").value = '';
+            bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+            await fetchCategories();  // Refresh categories
+          } else {
+            alert(result.msg || "Failed to add category.");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error adding category.");
+        }finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+
       const assetSearch = document.getElementById("assetSearch");
-      const typeFilter = document.getElementById("typeFilter");
       const searchBtn = document.getElementById("searchBtn");
 
-      fetchAssets();
       async function fetchAssets() {
-        const response = await fetch('/api/assets', {
+        const response = await fetch('/api/category-assets', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -83,7 +128,7 @@ html
         const result = await response.json();
         const assets=result.value
         const searchQuery = assetSearch.value.trim().toLowerCase();
-        const selectedType = typeFilter.value.toLowerCase();
+        const selectedType = typeFilter.value.trim().toLowerCase();
 
         const tbody = document.querySelector("#assetTable tbody");
         tbody.innerHTML = '';
@@ -101,25 +146,55 @@ html
 
         filtered.forEach(asset => {
           const row = document.createElement('tr');
+          const categoryOptions = categories.map(cat => 
+            `<option value="${cat}" ${asset.category === cat ? "selected" : ""}>${cat}</option>`
+          ).join('')+`<option ${asset.category === "OTHER" ? "selected" : ""} disabled>OTHER</option>`;
+
           row.innerHTML = `
             <td>${asset.make}</td>
             <td>${asset.model}</td>
             <td>${asset.description}</td>
             <td>${asset.serialNo}</td>
-            <td>${asset.category}</td>
             <td>
-              <a href="/master/asset/edit/${asset.id}" class="btn btn-sm btn-warning me-1">Edit</a>
-              <a href="/master/asset/issue/${asset.id}" class="btn btn-sm btn-info me-1">Issue</a>
-            </td>
-          `;
+            <select class="form-select form-select-sm category-select" onchange="updateCategory('${asset.id}', this)">
+              ${categoryOptions}
+            </select>
+            </td>`;
           tbody.appendChild(row);
         });
       }
 
-      fetchAssets();
 
       searchBtn.addEventListener("click", fetchAssets);
       typeFilter.addEventListener("change", fetchAssets);
+
+      async function updateCategory(assetId, selectElement) {
+        const newCategory = selectElement.value;
+        selectElement.disabled = true;
+
+        try {
+          const res = await fetch('/api/update-category', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: JSON.stringify({ assetId, newCategory })
+          });
+
+          const result = await res.json();
+          if (result.code === 200) {
+            alert("Category updated.");
+          } else {
+            alert(result.msg || "Failed to update.");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error updating category.");
+        } finally {
+          selectElement.disabled = false;
+        }
+      }
 
 
     script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.4/dist/js/bootstrap.bundle.min.js" integrity="sha384-YUe2LzesAfftltw+PEaao2tjU/QATaW/rOitAq67e0CT0Zi2VVRL0oC4+gAaeBKu" crossorigin="anonymous")

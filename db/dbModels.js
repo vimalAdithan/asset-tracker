@@ -13,7 +13,7 @@ export const UserModel = sequelize.define(
       allowNull: true,
     },
     role: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM("employee", "master", "category"),
       allowNull: true,
     },
     hashedPassword: {
@@ -54,5 +54,13 @@ export const EmployeeModel = sequelize.define(
     timestamps: true,
   }
 );
+
+export const CategoryModel = sequelize.define("Category", {
+  name: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+});
 
 await sequelize.sync({ alter: true });

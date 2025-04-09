@@ -4,11 +4,12 @@ import { UserModel } from "../db/dbModels.js";
 
 export const SignUpController = async (req, res) => {
   try {
-    const { username, email, password, isAdmin } = req.body;
+    const { username, email, password, role } = req.body;
     if (
       username?.length < 3 ||
       !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email) ||
-      password?.length < 10
+      password?.length < 10 ||
+      !["employee", "master", "category"].includes(role)
     ) {
       return res.status(200).json({ msg: "Invalid Data", code: 400 });
     }
@@ -22,7 +23,7 @@ export const SignUpController = async (req, res) => {
     const userData = {
       email,
       username,
-      role: isAdmin ? "master" : "employee",
+      role,
       hashedPassword,
     };
     await UserModel.create(userData);

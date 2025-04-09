@@ -38,12 +38,12 @@ export const AddAsset = async (req, res) => {
   return res.status(200).json({ code: 200, msg: "Asset added successfully" });
 };
 
-export const AllAssets = async (req, res) => {
+export const AvailableAssets = async (req, res) => {
   try {
-    const allAssets = await AssetModel.findAll({
+    const availableAssets = await AssetModel.findAll({
       where: { status: "returned" },
     });
-    return res.status(200).json({ code: 200, value: allAssets });
+    return res.status(200).json({ code: 200, value: availableAssets });
   } catch (error) {
     console.error("E_ALL_ASSETS:", error.message);
     return res
